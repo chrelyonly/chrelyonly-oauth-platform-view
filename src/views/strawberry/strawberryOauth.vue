@@ -6,13 +6,15 @@ import {
   Lock,
   Key
 } from '@element-plus/icons-vue'
+import router from "@/router/index.js";
+import AuthorizeConfirm from "@/components/authorizeConfirm.vue/authorizeConfirm.vue";
 
 const loading = ref(false)
 
 const loginForm = ref({
   userAccount: '',
   password: '',
-  clientId: 'chrelyonly',
+  clientId: '',
   code: '',
   remember: true
 })
@@ -33,6 +35,10 @@ const getCode = ()=>{
   })
 }
 
+
+// 授权code
+const oauthKey = ref("");
+// 登录
 const handleLogin = async () => {
   if (!loginForm.value.userAccount) {
     ElMessage.warning('请输入账号')
@@ -63,6 +69,8 @@ const handleLogin = async () => {
   $https("/open-api/oauth2/oauth2Authorize","post",params,2,headers).then(res => {
     if (res.data.code === 200) {
       ElMessage.success('登录成功')
+      visible.value = true
+      oauthKey.value = res.data.data.oauthKey
     }else{
       ElMessage.error(res.data.msg)
     }
@@ -73,8 +81,44 @@ const handleLogin = async () => {
 }
 
 
+
+
+// 授权弹窗
+const visible = ref(false)
+const appInfo = {
+  appName: '草莓论坛',
+  appLogo: '🍓',
+  appDesc: '申请获取你的账号信息'
+}
+const userInfo = {
+  nickname: 'chrelyonly',
+  avatar: 'https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png'
+}
+const scopes = [
+  '获取你的昵称',
+  '获取你的头像',
+  '读取你的基础资料'
+]
+
+const handleConfirm = () => {
+  console.log('确认授权')
+
+  window.location.href = redirectUri.value + "?oauthKey=" + oauthKey.value
+}
+
+const handleCancel = () => {
+  console.log('取消授权')
+}
+
+
+const redirectUri = ref("")
 onMounted(()=>{
   getCode()
+
+  // 获取参数
+  const params = new URLSearchParams(window.location.search)
+  loginForm.value.clientId = params.get('type')
+  redirectUri.value = params.get('redirectUri')
 })
 </script>
 
@@ -200,6 +244,15 @@ onMounted(()=>{
       </div>
     </div>
   </div>
+  <authorizeConfirm
+      v-model="visible"
+      :loading="loading"
+      :app-info="appInfo"
+      :user-info="userInfo"
+      :scopes="scopes"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+  />
 </template>
 
 <style scoped>
