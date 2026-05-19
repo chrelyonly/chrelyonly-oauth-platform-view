@@ -71,6 +71,11 @@ const handleLogin = async () => {
       ElMessage.success('登录成功')
       visible.value = true
       oauthKey.value = res.data.data.oauthKey
+      appInfo.value = res.data.data.openAppid
+      $setStore({
+        name: "userInfo",
+        content: res.data.data
+      })
     }else{
       ElMessage.error(res.data.msg)
     }
@@ -85,15 +90,9 @@ const handleLogin = async () => {
 
 // 授权弹窗
 const visible = ref(false)
-const appInfo = {
-  appName: '草莓论坛',
-  appLogo: '🍓',
-  appDesc: '申请获取你的账号信息'
-}
-const userInfo = {
-  nickname: 'chrelyonly',
-  avatar: 'https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png'
-}
+const appInfo = ref(null)
+
+
 const scopes = [
   '获取你的昵称',
   '获取你的头像',
@@ -110,15 +109,30 @@ const handleCancel = () => {
   console.log('取消授权')
 }
 
+// 用户登录状态
+const userInfo = ref(null)
+// 获取用户登录状态
+const getUserLogin = () => {
+  userInfo.value = $getStore({
+    name: "userInfo",
+  });
+  if (userInfo.value) {
+    oauthKey.value = userInfo.value.oauthKey
+    appInfo.value = userInfo.value.openAppid
+    visible.value = true
+  }
+}
 
 const redirectUri = ref("")
 onMounted(()=>{
   getCode()
-
+  getUserLogin()
   // 获取参数
   const params = new URLSearchParams(window.location.search)
   loginForm.value.clientId = params.get('type')
   redirectUri.value = params.get('redirectUri')
+
+//   判断是否存在旧的授权信息，如果存在就直接登陆了
 })
 </script>
 
@@ -247,8 +261,7 @@ onMounted(()=>{
   <authorizeConfirm
       v-model="visible"
       :loading="loading"
-      :app-info="appInfo"
-      :user-info="userInfo"
+      :appInfo="appInfo"
       :scopes="scopes"
       @confirm="handleConfirm"
       @cancel="handleCancel"

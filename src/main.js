@@ -31,6 +31,11 @@ import "@/util/datePrototype"
 // 引入全局通用请求
 import {http} from '@/util/https.js';
 window.$https = http;
+// 引入自用缓存工具
+import {clearStore, getStore, setStore} from "@/stores/store.js";
+window.$setStore = setStore;
+window.$getStore = getStore;
+window.$clearStore = clearStore;
 // 自定义结束 ************************************************************
 app.use(createPinia())
 app.use(router)

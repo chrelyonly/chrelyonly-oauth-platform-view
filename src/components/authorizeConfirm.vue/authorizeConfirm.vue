@@ -20,16 +20,6 @@ const props = defineProps({
     })
   },
 
-  /**
-   * 用户信息
-   */
-  userInfo: {
-    type: Object,
-    default: () => ({
-      nickname: '',
-      avatar: ''
-    })
-  },
 
   /**
    * 权限
@@ -84,6 +74,7 @@ const handleCancel = () => {
       width="520px"
       align-center
       :show-close="false"
+      :close-on-click-modal="false"
       class="oauth-dialog"
   >
 
@@ -91,7 +82,10 @@ const handleCancel = () => {
 
       <!-- logo -->
       <div class="oauth-logo">
-        {{ appInfo.appLogo }}
+        <el-avatar
+            :src="appInfo.appLogo"
+            :size="100"
+        />
       </div>
 
       <!-- 标题 -->
@@ -103,31 +97,8 @@ const handleCancel = () => {
         {{ appInfo.appDesc }}
       </div>
 
-      <!-- 用户 -->
-      <div class="oauth-user">
-
-        <el-avatar
-            :src="userInfo.avatar"
-            :size="52"
-        />
-
-        <div class="oauth-user-info">
-
-          <div class="nickname">
-            {{ userInfo.nickname }}
-          </div>
-
-          <div class="status">
-            已登录莓莓账号
-          </div>
-
-        </div>
-
-      </div>
-
       <!-- 权限 -->
       <div class="scope-list">
-
         <div
             class="scope-item"
             v-for="(item,index) in scopes"
@@ -201,12 +172,10 @@ const handleCancel = () => {
 /* logo */
 
 .oauth-logo {
-  width: 84px;
-  height: 84px;
 
   border-radius: 26px;
 
-  margin: 0 auto 24px;
+  margin: 0 auto;
 
   display: flex;
   justify-content: center;
@@ -215,15 +184,6 @@ const handleCancel = () => {
   font-size: 40px;
   color: white;
 
-  background:
-      linear-gradient(
-          135deg,
-          #ff8fb8,
-          #ff5c8d
-      );
-
-  box-shadow:
-      0 12px 28px rgba(255, 105, 180, 0.24);
 }
 
 /* 标题 */
