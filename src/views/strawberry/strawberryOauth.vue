@@ -1,13 +1,12 @@
 <script setup>
 import {onMounted, ref} from 'vue'
-import { ElMessage } from 'element-plus'
-import {
-  User,
-  Lock,
-  Key
-} from '@element-plus/icons-vue'
-import router from "@/router/index.js";
+import {ElMessage} from 'element-plus'
+import {Key, Lock, User} from '@element-plus/icons-vue'
 import AuthorizeConfirm from "@/components/authorizeConfirm.vue/authorizeConfirm.vue";
+import githubLogo from '@/assets/image/github.png'
+import giteeLogo from '@/assets/image/gitee.png'
+import qqLogo from '@/assets/image/qq.png'
+import googleLogo from '@/assets/image/google.png'
 
 const loading = ref(false)
 
@@ -25,17 +24,63 @@ const captchaInfo = ref({
   image: "",
 })
 // 获取验证码
-const getCode = ()=>{
-  let params = {
-
-  }
-  $https("/open-api/oauth2/getCode","get",params,1,{}).then(res => {
+const getCode = () => {
+  let params = {}
+  $https("/open-api/oauth2/getCode", "get", params, 1, {}).then(res => {
     captchaInfo.value.image = res.data.data.image
     captchaInfo.value.key = res.data.data.key
   })
 }
 
+/**
+ * 第三方登录列表
+ */
+const oauthList = ref([
+  {
+    type: 'google',
+    name: 'GOOGLE',
+    logo: googleLogo,
+    class: 'google'
+  },
+  {
+    type: 'github',
+    name: 'GitHub',
+    logo: githubLogo,
+    class: 'github'
+  },
+  {
+    type: 'gitee',
+    name: 'Gitee',
+    logo: giteeLogo,
+    class: 'gitee'
+  },
+  {
+    type: 'qq',
+    name: 'QQ',
+    logo: qqLogo,
+    class: 'qq'
+  }
+])
 
+
+/**
+ * 三方登录
+ */
+const thirdLogin = (type) => {
+  let params = {
+  //   回调地址
+    redirectUri: redirectUri.value,
+    type: type,
+    clientId: loginForm.value.clientId
+  }
+  $https("/open-api/oauth2/login/oauth2","post",params,2,{}).then( res=> {
+    if (res.data.code === 200){
+      window.location.href = res.data.data
+    }else{
+      ElMessage.error(res.data.msg)
+    }
+  })
+}
 // 授权code
 const oauthKey = ref("");
 // 登录
@@ -66,7 +111,7 @@ const handleLogin = async () => {
     "Captcha-Key": captchaInfo.value.key,
     "Captcha-Code": loginForm.value.code,
   }
-  $https("/open-api/oauth2/oauth2Authorize","post",params,2,headers).then(res => {
+  $https("/open-api/oauth2/oauth2Authorize", "post", params, 2, headers).then(res => {
     if (res.data.code === 200) {
       ElMessage.success('登录成功')
       visible.value = true
@@ -76,7 +121,7 @@ const handleLogin = async () => {
         name: "userInfo",
         content: res.data.data
       })
-    }else{
+    } else {
       ElMessage.error(res.data.msg)
     }
   }).finally(() => {
@@ -84,8 +129,6 @@ const handleLogin = async () => {
     loading.value = false
   })
 }
-
-
 
 
 // 授权弹窗
@@ -127,7 +170,7 @@ const getUserLogin = () => {
 }
 
 const redirectUri = ref("")
-onMounted(()=>{
+onMounted(() => {
   getCode()
   getUserLogin()
   // 获取参数
@@ -190,7 +233,7 @@ onMounted(()=>{
             >
               <template #prefix>
                 <el-icon>
-                  <User />
+                  <User/>
                 </el-icon>
               </template>
             </el-input>
@@ -207,14 +250,14 @@ onMounted(()=>{
             >
               <template #prefix>
                 <el-icon>
-                  <Lock />
+                  <Lock/>
                 </el-icon>
               </template>
             </el-input>
           </el-form-item>
 
           <el-form-item>
-            <el-input v-model="loginForm.code" maxlength="6" placeholder="请输入验证码" prefix-icon="el-icon-sunny" >
+            <el-input v-model="loginForm.code" maxlength="6" placeholder="请输入验证码" prefix-icon="el-icon-sunny">
               <template #append>
                 <el-image :src="captchaInfo.image" @click="getCode" style="height: 100%"></el-image>
               </template>
@@ -230,7 +273,7 @@ onMounted(()=>{
             >
               <template #prefix>
                 <el-icon>
-                  <Key />
+                  <Key/>
                 </el-icon>
               </template>
             </el-input>
@@ -257,7 +300,38 @@ onMounted(()=>{
           </el-button>
 
         </el-form>
+        <!-- 第三方登录 -->
+        <div class="oauth-login">
 
+          <div class="oauth-divider">
+            <span>第三方登录</span>
+          </div>
+
+          <div class="oauth-list">
+
+            <div
+                v-for="item in oauthList"
+                :key="item.type"
+                class="oauth-item"
+                :class="item.class"
+                @click="thirdLogin(item.type)"
+            >
+
+              <img
+                  :src="item.logo"
+                  class="oauth-logo"
+                  alt=""
+              />
+
+              <span>
+                {{ item.name }}
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
@@ -272,6 +346,99 @@ onMounted(()=>{
 </template>
 
 <style scoped>
+/* 三方登录 */
+.oauth-login {
+  margin-top: 28px;
+}
+
+.oauth-divider {
+  position: relative;
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.oauth-divider::before {
+  content: '';
+
+  position: absolute;
+  top: 50%;
+  left: 0;
+
+  width: 100%;
+  height: 1px;
+
+  background: #f0f0f0;
+}
+
+.oauth-divider span {
+  position: relative;
+
+  background: #fff;
+
+  padding: 0 14px;
+
+  font-size: 13px;
+  color: #999;
+}
+
+.oauth-list {
+  display: flex;
+  gap: 12px;
+
+  flex-wrap: wrap;
+}
+
+.oauth-item {
+  height: 42px;
+
+  padding: 0 16px;
+
+  border-radius: 12px;
+
+  border: 1px solid #f3f3f3;
+
+  background: #fff;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  cursor: pointer;
+
+  transition: all .2s ease;
+
+  font-size: 14px;
+
+  color: #555;
+}
+
+.oauth-item:hover {
+  transform: translateY(-1px);
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.oauth-logo {
+  width: 18px;
+  height: 18px;
+
+  object-fit: contain;
+}
+
+/* 品牌 hover */
+.github:hover {
+  border-color: #24292e;
+}
+
+.gitee:hover {
+  border-color: #c71d23;
+}
+
+.qq:hover {
+  border-color: #12b7f5;
+}
 
 .login-page {
   width: 100%;
@@ -283,13 +450,12 @@ onMounted(()=>{
   justify-content: center;
   align-items: center;
 
-  background:
-      linear-gradient(
-          135deg,
-          #fff7fb 0%,
-          #fff 45%,
-          #fff5f7 100%
-      );
+  background: linear-gradient(
+      135deg,
+      #fff7fb 0%,
+      #fff 45%,
+      #fff5f7 100%
+  );
 }
 
 /* 模糊背景 */
@@ -318,18 +484,16 @@ onMounted(()=>{
 
 .login-container {
   width: 980px;
-  height: 620px;
 
-  background: rgba(255,255,255,0.75);
+  background: rgba(255, 255, 255, 0.75);
 
   backdrop-filter: blur(20px);
 
-  border: 1px solid rgba(255,255,255,0.7);
+  border: 1px solid rgba(255, 255, 255, 0.7);
 
   border-radius: 32px;
 
-  box-shadow:
-      0 10px 40px rgba(255, 182, 193, 0.15);
+  box-shadow: 0 10px 40px rgba(255, 182, 193, 0.15);
 
   display: flex;
 
@@ -341,12 +505,11 @@ onMounted(()=>{
 /* 左边 */
 .left-content {
   width: 48%;
-  background:
-      linear-gradient(
-          180deg,
-          #ffeff6 0%,
-          #fff7fa 100%
-      );
+  background: linear-gradient(
+      180deg,
+      #ffeff6 0%,
+      #fff7fa 100%
+  );
 
   display: flex;
   flex-direction: column;
@@ -369,8 +532,7 @@ onMounted(()=>{
 
   font-size: 36px;
 
-  box-shadow:
-      0 10px 25px rgba(255, 105, 180, 0.12);
+  box-shadow: 0 10px 25px rgba(255, 105, 180, 0.12);
 
   margin-bottom: 28px;
 }
@@ -407,7 +569,7 @@ onMounted(()=>{
 
   border-radius: 999px;
 
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
 
   color: #d63384;
 
@@ -468,6 +630,7 @@ onMounted(()=>{
   border-color: #ff6ba6;
   background: white;
 }
+
 :deep(.el-input-group__append) {
   padding: 0;
 }
@@ -502,15 +665,13 @@ onMounted(()=>{
   font-size: 16px;
   font-weight: 600;
 
-  background:
-      linear-gradient(
-          135deg,
-          #ff7eb3 0%,
-          #ff5c8d 100%
-      );
+  background: linear-gradient(
+      135deg,
+      #ff7eb3 0%,
+      #ff5c8d 100%
+  );
 
-  box-shadow:
-      0 12px 24px rgba(255, 105, 180, 0.22);
+  box-shadow: 0 12px 24px rgba(255, 105, 180, 0.22);
 
   transition: all 0.25s ease;
 }
