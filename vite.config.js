@@ -46,7 +46,8 @@ export default defineConfig({
     // port: 2888,
     proxy: {
       '/api/': {
-        target: 'http://127.0.0.1:8079',
+        // target: 'http://127.0.0.1:8079',
+        target: 'https://oauth2.chrelyonly.cn/api',
         changeOrigin: true,
         ws: true,
         rewrite: path => path.replace(/^\/api/, ''),

@@ -107,6 +107,9 @@ const handleConfirm = () => {
 
 const handleCancel = () => {
   console.log('取消授权')
+  $clearStore({
+    name: "userInfo",
+  });
 }
 
 // 用户登录状态
